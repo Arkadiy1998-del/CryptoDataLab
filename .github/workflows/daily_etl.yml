@@ -1,0 +1,24 @@
+  on:
+    push:
+      branches:
+        - main
+    schedule:
+      - cron: "0 5 * * *"
+      
+  env:
+    DB_USER: ${{ secrets.USER }}
+    DB_PASSWORD: ${{ secrets.PASSWORD }}
+    DB_HOST: ${{ secrets.HOST }}
+    DB_PORT: ${{ secrets.PORT }}
+    DB_NAME: ${{ secrets.DBNAME }}
+
+  jobs:
+    daily_etl:
+      runs-on: windows-latest
+      steps:
+        - uses: actions/checkout@v3
+        - name: install_depends
+          run: pip install -r requirements.txt
+        - name: run_etl
+          run: python API_daily_requests.py
+        
