@@ -9,9 +9,10 @@ from sqlalchemy.pool import NullPool
 import psycopg2
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
-file_path = r"e:\users\agabekov_ai\Проекты\CryptoDataLab\prices.xlsx"
+file_path = r"e:\users\agabekov_ai\Проекты\CryptoDataLab\prices_b.xlsx"
 coins = ['bitcoin','ethereum','ripple']
 df = pd.DataFrame()
 if os.path.exists(file_path): os.remove(file_path)  
@@ -23,20 +24,16 @@ for name in coins:
     if json_data.status_code != 200:
         time.sleep(20)
     data = json_data.json()
-
     price_df = pd.DataFrame(data['prices'], columns = ['day_id', 'price'])
     mc_df = pd.DataFrame(data["market_caps"], columns = ['day_id', 'market_caps'])
-    vol_df = pd.DataFrame(data["total_volumes"], columns = ['day_id', 'total_volumes'])
-
+    vol_df = pd.DataFrame(data["total_volumes"], columns = ['day_id', 'total_volumes'])  
     temp_df = price_df.merge(mc_df, on = "day_id").merge(vol_df, on = "day_id")
-
     temp_df['day_id'] = pd.to_datetime(temp_df['day_id'].astype('int64'), unit = 'ms')
-
     temp_df = temp_df.set_index('day_id')
     temp_df = temp_df.resample('1D').agg({
         'price' : 'mean',
         'market_caps' : 'last',
-        'total_volumes' : 'sum'  
+        'total_volumes' : 'mean'
         }).reset_index()
     temp_df.insert(1, "coin", name)
     df = pd.concat([df, temp_df], ignore_index = True)
@@ -57,6 +54,6 @@ df.to_sql(
     "quotes",
     con = engine,
     schema = "data_lake",
-    if_exists = "append",
-    index = False,
-    method = "multi")   
+   if_exists = "append",
+   index = False,
+   method = "multi")   
