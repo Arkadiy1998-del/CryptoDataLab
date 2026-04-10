@@ -18,7 +18,7 @@
       steps:
         - uses: actions/checkout@v3
         - name: install_depends
-          run: pip install -r requirements.txt
+          run: python -m pip install -r requirements.txt
         - name: run_etl
-          run: python API_daily_requests.py
+          run: python etl/API_daily_requests.py
         
