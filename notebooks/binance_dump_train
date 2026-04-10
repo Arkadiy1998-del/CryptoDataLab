@@ -1,0 +1,26 @@
+import requests
+import certifi
+import zipfile
+
+url = "https://data.binance.vision/data/spot/daily/klines/BTCUSDT/1d/BTCUSDT-1d-2023-01-01.zip"  # нужный адрес
+
+r = requests.get(url, verify = certifi.where())    # с помощью библиотеки requests отправляем запрос на адрес
+                                                   # c помощью verify говорим, 
+                                                   # чтобы при запросе сертификаты проверялись по переданному списку разрешённых, 
+                                                   # а не по системному списку
+# r будет содержать
+#r.status_code → 200, 404 и т.д.
+#r.headers → метаданные ответа
+#r.text → текст (если HTML/JSON)
+#r.content → сырые байты (binary data)
+with open("binance_dump.zip", "wb") as f:           # open работает с переданным файлом - в данном случае 
+                                                    # перезаписыает его (w)/создаёт, если файла нет                  
+    f.write(r.content)                              # b - учитываем, что в нём бинарные данные
+                                                    # берём сырые байты (content) и записываем их
+# за счёт with процесс останавливается, когда его внутренняя часть выполнена
+
+if r.status_code != 200:
+    print(r.status_code)
+
+with zipfile.ZipFile("binance_dump.zip", "r") as z:
+    z.extractall("binance_data/")
