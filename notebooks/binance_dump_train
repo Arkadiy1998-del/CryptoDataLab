@@ -1,26 +1,61 @@
 import requests
 import certifi
 import zipfile
+import time
+import numpy as np
 
-url = "https://data.binance.vision/data/spot/daily/klines/BTCUSDT/1d/BTCUSDT-1d-2023-01-01.zip"  # нужный адрес
+#url = "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2023-01.zip" # месяц, токен
 
-r = requests.get(url, verify = certifi.where())    # с помощью библиотеки requests отправляем запрос на адрес
-                                                   # c помощью verify говорим, 
-                                                   # чтобы при запросе сертификаты проверялись по переданному списку разрешённых, 
-                                                   # а не по системному списку
-# r будет содержать
-#r.status_code → 200, 404 и т.д.
-#r.headers → метаданные ответа
-#r.text → текст (если HTML/JSON)
-#r.content → сырые байты (binary data)
-with open("binance_dump.zip", "wb") as f:           # open работает с переданным файлом - в данном случае 
-                                                    # перезаписыает его (w)/создаёт, если файла нет                  
-    f.write(r.content)                              # b - учитываем, что в нём бинарные данные
-                                                    # берём сырые байты (content) и записываем их
-# за счёт with процесс останавливается, когда его внутренняя часть выполнена
+http = "https://data.binance.vision/data/spot/monthly/klines"
 
-if r.status_code != 200:
-    print(r.status_code)
+# для итераций
+pairs = ['BTCUSDT', 'ETHUSDT', 'XRPUSDT']
+months = np.arange(1,13)
+years = np.arange(2021, 2027)
+# счётчик запросов
+query_count = 0
 
-with zipfile.ZipFile("binance_dump.zip", "r") as z:
-    z.extractall("binance_data/")
+# проходимся по связкам год-месяц-монета
+for year in range(len(years)):
+    for month in range(len(months)):
+        for pair in pairs:
+            name = f"Dump_{pair}_{years[year]}_{str(months[month]).zfill(2)}"
+            url = f"{http}/{pair}/1d/{pair}-1d-{years[year]}-{str(months[month]).zfill(2)}.zip"
+            r = requests.get(url, verify = certifi.where()) # с помощью библиотеки requests отправляем запрос на адрес
+            # c помощью verify говорим, 
+            # чтобы при запросе сертификаты проверялись по переданному списку разрешённых, а не по системному списку
+            # r будет содержать
+            #r.status_code → 200, 404 и т.д.
+            #r.headers → метаданные ответа
+            #r.text → текст (если HTML/JSON)
+            #r.content → сырые байты (binary data)
+            with open(name, "wb") as f: 
+            # open работает с переданным файлом - в данном случае перезаписыает его (w)/создаёт, если файла нет
+            # b - учитываем, что в нём бинарные данные
+            # берём сырые байты (content) и записываем их
+            # за счёт with процесс останавливается, когда его внутренняя часть выполнена
+                f.write(r.content)
+            query_count += 1
+            print(f"{name} загружен")
+            if query_count == 20: 
+                time.sleep(20)
+                query_count = 0
+            with zipfile.ZipFile(f"{name}.zip", "r") as z:
+                z.extractall("binance_data/")
+            print(f"{name} записан")
+            break
+
+
+
+
+                                                   
+
+           
+                                                    #                   
+                                  
+                                                    
+
+
+#if r.status_code != 200:
+#    print(r.status_code)
+
